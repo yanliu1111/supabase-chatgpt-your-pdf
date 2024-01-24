@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database } from '../_lib/database.ts';
 import { processMarkdown } from '../_lib/markdown-parser.ts';
-
+// Deno cache dependencies
+// These are automatically injected, tyoe guard best practice
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
         authorization,
@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
       }
     );
   }
-
+  // extend for pdf, need pdf parser
   const { data: file } = await supabase.storage
     .from('files')
     .download(document.storage_object_path);
@@ -74,8 +74,10 @@ Deno.serve(async (req) => {
   }
 
   const fileContents = await file.text();
+
   const processedMd = processMarkdown(fileContents);
 
+  //batch insert, insert multiple records in single request
   const { error } = await supabase.from('document_sections').insert(
     processedMd.sections.map(({ content }) => ({
       document_id,
@@ -97,7 +99,7 @@ Deno.serve(async (req) => {
   console.log(
     `Saved ${processedMd.sections.length} sections for file '${document.name}'`
   );
-
+  //nothing to return, no content
   return new Response(null, {
     status: 204,
     headers: { 'Content-Type': 'application/json' },

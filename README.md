@@ -13,12 +13,6 @@ Create a production-ready MVP for securely chatting with your documents.
 - **REST API:** Expose a flexible REST API that we’ll consume to build the interactive front-end.
 - **Row-level Security:** Secure all of your user data user data with production-ready row-level security.
 
-## 🎥 YouTube video
-
-This entire workshop was recorded as a YouTube video. Feel free to watch it here:
-
-https://www.youtube.com/watch?v=ibzlEQmgPPY
-
 ## 📄 Workshop Instructions
 
 Thanks for joining! Let's dive in.
@@ -43,6 +37,12 @@ Thanks for joining! Let's dive in.
    ```
 
 1. **Step-by-step guide:** These steps are written out line-by-line. Feel free to follow along using the [steps below](#step-by-step).
+
+### 🚶 Need to step out?
+
+If you can't make the full workshop, no worries! We'll be putting out a YouTube video later that goes over the same content.
+
+If you'd like to get notified when the video is available, feel free to drop your name and email on [this form](https://airtable.com/appGOhbhNzJCGQoo6/shrHkzwU256fIBDIC) and we'll send you the link!
 
 ## 🧱 Pre-req’s
 
@@ -91,18 +91,18 @@ The beginning of step 0 is aka to:
 npx create-next-app -e with-supabase
 ```
 
+### check supabase status
+
+```bash
+$ npx supabase status
+```
+
 Refer to this step if you want to learn about the additions added on top of `create-next-app` to get us up and running quicker for this workshop _(VS Code settings, UI components/styles/layouts)_. Otherwise, skip straight to [`step-1`](#step-1---storage).
 
 1. Install Supabase as dev dependency.
 
    ```bash
    npm i -D supabase@1.102.0
-   ```
-
-1. Initialize Supabase project.
-
-   ```bash
-   npx supabase init
    ```
 
 1. (Optional) Setup VSCode environment.
@@ -223,19 +223,16 @@ First install NPM dependencies.
 npm i
 ```
 
-#### Setup Supabase stack
+#### Start local Supabase stack
 
-When developing a project in Supabase, you can choose to develop locally or directly on the cloud.
+1. Next initialize and start a local version of Supabase _(runs in Docker)_.
 
-##### Local
-
-1. Start a local version of Supabase _(runs in Docker)_.
-
-   ```shell
+   ```bash
+   npx supabase init
    npx supabase start
    ```
 
-1. Store the Supabase URL & public anon key in `.env.local` for Next.js.
+1. Store Supabase URL & public anon key in `.env.local` for Next.js.
 
    ```bash
    npx supabase status -o env \
@@ -243,33 +240,6 @@ When developing a project in Supabase, you can choose to develop locally or dire
      --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY |
        grep NEXT_PUBLIC > .env.local
    ```
-
-##### Cloud
-
-1. Create a Supabase project at https://database.new, or via the CLI:
-
-   ```shell
-   npx supabase projects create -i "ChatGPT Your Files"
-   ```
-
-   Your Org ID can be found in the URL after [selecting an org](https://supabase.com/dashboard/org/_/general).
-
-1. Link your CLI to the project.
-
-   ```shell
-   npx supabase link --project-ref=<project-id>
-   ```
-
-   You can get the project ID from the [general settings page](https://supabase.com/dashboard/project/_/settings/general).
-
-1. Store Supabase URL & public anon key in `.env.local` for Next.js.
-
-   ```shell
-   NEXT_PUBLIC_SUPABASE_URL=<api-url>
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
-   ```
-
-   You can get the project API URL and anonymous key from the [API settings page](https://supabase.com/dashboard/project/_/settings/api).
 
 #### Build a SQL migration
 
@@ -291,8 +261,7 @@ When developing a project in Supabase, you can choose to develop locally or dire
 
     ```sql
     insert into storage.buckets (id, name)
-    values ('files', 'files')
-    on conflict do nothing;
+    values ('files', 'files');
     ```
 
 1.  Add RLS policies to restrict access to files.
@@ -371,12 +340,6 @@ We can improve our previous RLS policy to require a UUID in the uploaded file pa
 
     ```bash
     npx supabase migration up
-    ```
-
-    or if you are developing directly on the cloud, push your migrations up:
-
-    ```
-    npx supabase db push
     ```
 
 ---
@@ -517,7 +480,7 @@ Let's create a `documents` and `document_sections` table to store our processed 
     );
     ```
 
-1.  If developing locally, add `supabase_url` secret to `./supabase/seed.sql`. We will use this to query our Edge Functions within our local environment.
+1.  Add `supabase_url` secret to `./supabase/seed.sql`. We will use this to query our Edge Functions within our local environment. In production, set this to your Supabase project's API URL.
 
     ```sql
     select vault.create_secret(
@@ -525,17 +488,6 @@ Let's create a `documents` and `document_sections` table to store our processed 
       'supabase_url'
     );
     ```
-
-    If you are developing directly on the cloud, open up the [SQL Editor](https://supabase.com/dashboard/project/_/sql/new) and set this to your Supabase project's API URL:
-
-    ```sql
-    select vault.create_secret(
-      '<api-url>',
-      'supabase_url'
-    );
-    ```
-
-    You can get the project API URL from the [API settings page](https://supabase.com/dashboard/project/_/settings/api).
 
 1.  Create a function to retrieve the URL.
 
@@ -598,12 +550,6 @@ Let's create a `documents` and `document_sections` table to store our processed 
     npx supabase migration up
     ```
 
-    or if you are developing directly on the cloud, push your migrations up:
-
-    ```
-    npx supabase db push
-    ```
-
 #### Edge function for `process`
 
 1.  Create the Edge Function file.
@@ -619,6 +565,8 @@ Let's create a `documents` and `document_sections` table to store our processed 
     ```bash
     brew install deno
     ```
+
+    For windows,check here https://docs.deno.com/runtime/manual/
 
 1.  First let's note how dependencies are resolved using an import map - `./supabase/functions/import_map.json`.
 
@@ -785,19 +733,13 @@ Let's create a `documents` and `document_sections` table to store our processed 
     });
     ```
 
-1.  If developing locally, open a new terminal and serve the edge functions.
+1.  In a new terminal we'll serve the edge functions locally.
 
     ```bash
     npx supabase functions serve
     ```
 
     _Note: Local Edge Functions are automatically served as part of `npx supabase start`, but this command allows us to also monitor their logs._
-
-    If you're developing directly on the cloud, deploy your edge function:
-
-    ```shell
-    npx supabase functions deploy
-    ```
 
 #### Display documents on the frontend
 
@@ -883,13 +825,13 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
     declare
       content_column text = TG_ARGV[0];
       embedding_column text = TG_ARGV[1];
-      batch_size int = case when array_length(TG_ARGV, 1) >= 3 then TG_ARGV[2]::int else 5 end;
-      timeout_milliseconds int = case when array_length(TG_ARGV, 1) >= 4 then TG_ARGV[3]::int else 5 * 60 * 1000 end;
+      batch_size int = TG_ARGV[2];
       batch_count int = ceiling((select count(*) from inserted) / batch_size::float);
+      result int;
     begin
-      -- Loop through each batch and invoke an edge function to handle the embedding generation
+
       for i in 0 .. (batch_count-1) loop
-      perform
+      select
         net.http_post(
           url := supabase_url() || '/functions/v1/embed',
           headers := jsonb_build_object(
@@ -901,9 +843,9 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
             'table', TG_TABLE_NAME,
             'contentColumn', content_column,
             'embeddingColumn', embedding_column
-          ),
-          timeout_milliseconds := timeout_milliseconds
-        );
+          )
+        )
+      into result;
       end loop;
 
       return null;
@@ -918,28 +860,14 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
       after insert on document_sections
       referencing new table as inserted
       for each statement
-      execute procedure private.embed(content, embedding);
+      execute procedure private.embed(content, embedding, 10);
     ```
 
-    Note we pass 2 trigger arguments to `embed()`:
+    Note we pass 3 arguments to `embed()`:
 
     - The first specifies which column contains the text content to embed.
     - The second specifies the destination column to save the embedding into.
-
-    There are also 2 more optional trigger arguments available:
-
-    ```sql
-    create trigger embed_document_sections
-      after insert on document_sections
-      referencing new table as inserted
-      for each statement
-      execute procedure private.embed(content, embedding, 5, 300000);
-    ```
-
-    - The third argument specifies the batch size (number of records to include in each edge function call). Default is 5.
-    - The fourth argument specifies the HTTP connection timeout for each edge function call. Default is 300000 ms (5 minutes).
-
-    Feel free to adjust these according to your needs. A larger batch size will require a longer timeout per request, since each invocation will have more embeddings to generate. A smaller batch size can use a lower timeout.
+    - The third specifies the number of records to include in each edge function call.
 
 1.  Apply the migration to our local database.
 
@@ -947,15 +875,9 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
     npx supabase migration up
     ```
 
-    or if you are developing directly on the cloud, push your migrations up:
-
-    ```
-    npx supabase db push
-    ```
-
 #### Create Edge Function for `embed`
 
-1.  Create edge function file.
+1.  Create edge function file
 
     ```bash
     npx supabase functions new embed
@@ -1096,12 +1018,6 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
     });
     ```
 
-1.  If you're developing directly on the cloud, deploy your edge function:
-
-    ```shell
-    npx supabase functions deploy
-    ```
-
 ---
 
 ### `Step 4` - Chat
@@ -1195,9 +1111,9 @@ Finally, let's implement the chat functionality. For this workshop, we're going 
 
     ```tsx
     <Input
-      type="text"
+      type='text'
       autoFocus
-      placeholder="Send a message"
+      placeholder='Send a message'
       value={input}
       onChange={handleInputChange}
     />
@@ -1240,7 +1156,7 @@ Finally, let's implement the chat functionality. For this workshop, we're going 
 1.  Disable send button until the component is ready.
 
     ```tsx
-    <Button type="submit" disabled={!isReady}>
+    <Button type='submit' disabled={!isReady}>
       Send
     </Button>
     ```
@@ -1278,7 +1194,7 @@ Finally, let's implement the chat functionality. For this workshop, we're going 
 
     _Note: Our embeddings are normalized, so inner product and cosine similarity are equivalent in terms of output. Note though that pgvector's `<=>` operator is cosine distance, not cosine similarity, so `inner product == 1 - cosine distance`._
 
-    We also filter by a `match_threshold` in order to return only the most relevant results (1 = most similar, -1 = most dissimilar).
+    We also filter by a `match_threshold` in order to return only the most relevant results (1 = most similar, 0 = least similar).
 
     _Note: `match_threshold` is negated because `<#>` is a negative inner product. See the pgvector docs for more details on why `<#>` is negative._
 
@@ -1286,12 +1202,6 @@ Finally, let's implement the chat functionality. For this workshop, we're going 
 
     ```bash
     npx supabase migration up
-    ```
-
-    or if you are developing directly on the cloud, push your migrations up:
-
-    ```
-    npx supabase db push
     ```
 
 #### Create `chat` Edge Function
@@ -1469,18 +1379,6 @@ Finally, let's implement the chat functionality. For this workshop, we're going 
 
     _Note: we must also return CORS headers here (or anywhere else we send a response)._
 
-1.  If you're developing directly on the cloud, set your `OPENAI_API_KEY` secret in the cloud:
-
-    ```shell
-    npx supabase secrets set OPENAI_API_KEY=<openai-key>
-    ```
-
-    Then deploy your edge function:
-
-    ```shell
-    npx supabase functions deploy
-    ```
-
 #### Try it!
 
 Let's try it out! Here are some questions you could try asking:
@@ -1580,13 +1478,9 @@ Jump to a previous step:
 
 ## 🚀 Going to prod
 
-If you've been developing the app locally, follow these instructions to deploy your app to a production Supabase project.
+Up until now we've been developing the app locally. Use these instructions to deploy your app to a production Supabase project.
 
-1. Create a Supabase project at https://database.new, or via the CLI:
-
-   ```shell
-   npx supabase projects create -i "ChatGPT Your Files"
-   ```
+1. Create a [new Supabase project](https://supabase.com/dashboard/new/_).
 
 1. Link the CLI with your Supabase project.
 
@@ -1642,3 +1536,7 @@ Please file feedback and issues on the [on this repo's issue board](https://gith
 - [pgvector Indexes](https://supabase.com/docs/guides/ai/vector-indexes)
 - [Generate Embeddings using Edge Functions](https://supabase.com/docs/guides/ai/quickstarts/generate-text-embeddings)
 - [Going to Production](https://supabase.com/docs/guides/ai/going-to-prod)
+
+```
+
+```
