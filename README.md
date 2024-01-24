@@ -17,3 +17,10 @@ Create a production-ready MVP for securely chatting with your documents.
 - You will learn pgvector, how to index your text, and create edge functions to process the markdown files into document_sections table.
 - You will learn Embedding from GR ❤️, highly recommend his Embedding teaching.
 - The interesting step is generating the ueser message embedding in the frontend. Then determine the similarity with markdown files embedding.
+
+### 📑Notes files:<br>
+
+The first time following the learning using git branches, I like this way, time efficient and more focus on the knowledge and code logic. The code edits in the following files: <br>
+**Step 2:** Readme, app/files/pages.tsx, supabase/functions/process/index.js, supbase/seed.sql,supabase/migrations/documents.sql<br>
+**Step 3:** Readme, supabase/migrations/embed.sql<br>
+**Step 4:** Readme, next.config.js, app/chat/pages.tsx, supabase/migrations/match.sql<br>
