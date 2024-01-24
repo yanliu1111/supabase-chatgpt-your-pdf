@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { env, pipeline } from '@xenova/transformers';
-import { Database } from '../_lib/database.ts';
+
+import { createClient } from '@supabase/supabase-js';
 
 // Configuration for Deno runtime
 env.useBrowserCache = false;
@@ -10,7 +10,7 @@ const generateEmbedding = await pipeline(
   'feature-extraction',
   'Supabase/gte-small'
 );
-
+// These are automatically injected
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
       }
     );
   }
-
   const authorization = req.headers.get('Authorization');
 
   if (!authorization) {
@@ -39,7 +38,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
         authorization,
@@ -49,7 +48,6 @@ Deno.serve(async (req) => {
       persistSession: false,
     },
   });
-
   const { ids, table, contentColumn, embeddingColumn } = await req.json();
 
   const { data: rows, error: selectError } = await supabase
@@ -64,28 +62,29 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
     });
   }
-
   for (const row of rows) {
+    //batch of 10 in this case
     const { id, [contentColumn]: content } = row;
 
     if (!content) {
       console.error(`No content available in column '${contentColumn}'`);
       continue;
     }
-
+    // we created func generateEmbedding in pipeline (huggingface)
     const output = await generateEmbedding(content, {
-      pooling: 'mean',
-      normalize: true,
+      pooling: 'mean', //pooling to one from whole bunch of tokens
+      normalize: true, // if you think about your vector, it got a direction and length in whatever n dimensional space it's in and if you normalize that length, that is if you take that length and turn it down to a length of 1, that turns it into a unit vector and that's called a normalized vector. why it is important, later on when we calculate similarity so if you recall me mentioning cosine similarity, cosine similarity is a measure of the angle between two vectors and if you have two vectors that are both unit vectors, then the cosine similarity is just the dot product of those two vectors. so it's a very simple calculation and it's very fast to do. so that's why we normalize the vector.
     });
+    //the second param we want to do 2 things: 1. set pooling to mean 2. normalize to true
 
     const embedding = JSON.stringify(Array.from(output.data));
-
+    // stringify or casting to string
     const { error } = await supabase
       .from(table)
       .update({
         [embeddingColumn]: embedding,
       })
-      .eq('id', id);
+      .eq('id', id); //filtering by id
 
     if (error) {
       console.error(
@@ -102,9 +101,4 @@ Deno.serve(async (req) => {
       })}`
     );
   }
-
-  return new Response(null, {
-    status: 204,
-    headers: { 'Content-Type': 'application/json' },
-  });
 });

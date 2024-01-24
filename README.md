@@ -91,12 +91,6 @@ The beginning of step 0 is aka to:
 npx create-next-app -e with-supabase
 ```
 
-### check supabase status
-
-```bash
-$ npx supabase status
-```
-
 Refer to this step if you want to learn about the additions added on top of `create-next-app` to get us up and running quicker for this workshop _(VS Code settings, UI components/styles/layouts)_. Otherwise, skip straight to [`step-1`](#step-1---storage).
 
 1. Install Supabase as dev dependency.
@@ -566,8 +560,6 @@ Let's create a `documents` and `document_sections` table to store our processed 
     brew install deno
     ```
 
-    For windows,check here https://docs.deno.com/runtime/manual/
-
 1.  First let's note how dependencies are resolved using an import map - `./supabase/functions/import_map.json`.
 
     Import maps aren't required in Deno, but they can simplify imports and keep dependency versions consistent. All of our dependencies come from NPM, but since we're using Deno we fetch them from a CDN like https://esm.sh or https://cdn.jsdelivr.net.
@@ -1018,7 +1010,15 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
     });
     ```
 
----
+Quickly test the function by running:
+
+```bash
+npx supabase functions serve
+```
+
+this way we can monitor the logs for our edge function, this serve does all edge functions. simply running the logs of all of these.
+
+#### The sequence of events that we need to consider, everything starts from just a simple upload to our storage table, that causes a trigger to create a document as well as process that document which in the edge function will generate document sections and then we have a trigger on the document sections that will call the embed function and then go ahead and asynchronously create embedding on each of those document sections.
 
 ### `Step 4` - Chat
 
@@ -1536,7 +1536,3 @@ Please file feedback and issues on the [on this repo's issue board](https://gith
 - [pgvector Indexes](https://supabase.com/docs/guides/ai/vector-indexes)
 - [Generate Embeddings using Edge Functions](https://supabase.com/docs/guides/ai/quickstarts/generate-text-embeddings)
 - [Going to Production](https://supabase.com/docs/guides/ai/going-to-prod)
-
-```
-
-```
