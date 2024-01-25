@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { codeBlock } from 'common-tags';
+
 import OpenAI from 'openai';
-import { Database } from '../_lib/database.ts';
+import { codeBlock } from 'common-tags';
+import { createClient } from '@supabase/supabase-js';
 
 const openai = new OpenAI({
   apiKey: Deno.env.get('OPENAI_API_KEY'),
@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       headers: {
         authorization,
@@ -57,8 +57,7 @@ Deno.serve(async (req) => {
       persistSession: false,
     },
   });
-
-  const { messages, embedding } = await req.json();
+  const { chatId, message, messages, embedding } = await req.json();
 
   const { data: documents, error: matchError } = await supabase
     .rpc('match_document_sections', {
@@ -81,46 +80,42 @@ Deno.serve(async (req) => {
       }
     );
   }
-
   const injectedDocs =
     documents && documents.length > 0
       ? documents.map(({ content }) => content).join('\n\n')
       : 'No documents found';
-
-  console.log(injectedDocs);
 
   const completionMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
     [
       {
         role: 'user',
         content: codeBlock`
-        You're an AI assistant who answers questions about documents.
+          You're an AI assistant who answers questions about documents.
 
-        You're a chat bot, so keep your replies succinct.
+          You're a chat bot, so keep your replies succinct.
 
-        You're only allowed to use the documents below to answer the question.
+          You're only allowed to use the documents below to answer the question.
 
-        If the question isn't related to these documents, say:
-        "Sorry, I couldn't find any information on that."
+          If the question isn't related to these documents, say:
+          "Sorry, I couldn't find any information on that."
 
-        If the information isn't available in the below documents, say:
-        "Sorry, I couldn't find any information on that."
+          If the information isn't available in the below documents, say:
+          "Sorry, I couldn't find any information on that."
 
-        Do not go off topic.
+          Do not go off topic.
 
-        Documents:
-        ${injectedDocs}
-      `,
+          Documents:
+          ${injectedDocs}
+        `,
       },
-      ...messages,
+      ...messages, // Injected messages, all messages from the user
     ];
-
   const completionStream = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo-0613',
     messages: completionMessages,
-    max_tokens: 1024,
-    temperature: 0,
-    stream: true,
+    max_tokens: 1024, // what is the max tokens I want to generate response? 4096 tokens including output and input.
+    temperature: 0, // exactly same question and get exactly same answer, 0 - 1, high temperature means more creative, lower is more deteministic.
+    stream: true, // it streams the response token by token, instead of waiting for the whole response.
   });
 
   const stream = OpenAIStream(completionStream);

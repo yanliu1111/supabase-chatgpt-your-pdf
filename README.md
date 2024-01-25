@@ -1010,17 +1010,15 @@ Now let's add logic to generate embeddings automatically anytime new rows are ad
     });
     ```
 
-Quickly test the function by running:
-
-```bash
-npx supabase functions serve
-```
-
-this way we can monitor the logs for our edge function, this serve does all edge functions. simply running the logs of all of these.
-
-#### The sequence of events that we need to consider, everything starts from just a simple upload to our storage table, that causes a trigger to create a document as well as process that document which in the edge function will generate document sections and then we have a trigger on the document sections that will call the embed function and then go ahead and asynchronously create embedding on each of those document sections.
+---
 
 ### `Step 4` - Chat
+
+Embedding in frontend, we already did embedding for the file contents. There is other place we need to generate embeddings. That is for user messages.We need both in the embedding space to determine how similar they are. Those document sections will be the ones that we actually inject as context for llm GPT3.5.
+One option, we can either generate embedding directy i the browser. Other option for generating embedding in browser.
+Other option, taught before, using transformers.js, whcih use Onyx runtime under the hood which uses web assembly to accomplish this, but we actually are able do that in brower too 1ST option one. This is server side for generat embedding with edge functions.
+
+Today teach how to demonstrat on the frontend.
 
 Jump to a step:
 
@@ -1325,40 +1323,43 @@ Finally, let's implement the chat functionality. For this workshop, we're going 
 
 1.  The second step of RAG is to build our prompt, injecting in the relevant documents retrieved from our previous similarity search.
 
-    ```tsx
-    const injectedDocs =
-      documents && documents.length > 0
-        ? documents.map(({ content }) => content).join('\n\n')
-        : 'No documents found';
+        ```tsx
+        const injectedDocs =
+          documents && documents.length > 0
+            ? documents.map(({ content }) => content).join('\n\n')
+            : 'No documents found';
 
-    const completionMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
-      [
-        {
-          role: 'user',
-          content: codeBlock`
-              You're an AI assistant who answers questions about documents.
-    
-              You're a chat bot, so keep your replies succinct.
-    
-              You're only allowed to use the documents below to answer the question.
-    
-              If the question isn't related to these documents, say:
-              "Sorry, I couldn't find any information on that."
-    
-              If the information isn't available in the below documents, say:
-              "Sorry, I couldn't find any information on that."
-    
-              Do not go off topic.
-    
-              Documents:
-              ${injectedDocs}
-            `,
-        },
-        ...messages,
-      ];
-    ```
+        const completionMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] =
+          [
+            {
+              role: 'user',
+              content: codeBlock`
+                  You're an AI assistant who answers questions about documents.
 
-    _Note: the `codeBlock` template tag is a convenience function that will strip away indentations in our multiline string. This allows us to format our code nicely while preserving the intended indentation._
+                  You're a chat bot, so keep your replies succinct.
+
+                  You're only allowed to use the documents below to answer the question.
+
+                  If the question isn't related to these documents, say:
+                  "Sorry, I couldn't find any information on that."
+
+                  If the information isn't available in the below documents, say:
+                  "Sorry, I couldn't find any information on that."
+
+                  Do not go off topic.
+
+                  Documents:
+                  ${injectedDocs}
+                `,
+            },
+            ...messages,
+          ];
+        ```
+
+    Note: very first time the user asks a question, asked the question in chatbox, that will get sent up to the edge function as a single message. It ll basically inject in this prompt first message which is our prompt and injected documents (Roman-empire). This is essentially what's perfoming our RAG and then pass in the new message from user.
+    OpenAI will essentially reply to that, send the message back to the frontend,
+
+        _Note: the `codeBlock` template tag is a convenience function that will strip away indentations in our multiline string. This allows us to format our code nicely while preserving the intended indentation._
 
 1.  Finally, create a completion stream and return it.
 
