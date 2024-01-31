@@ -20,8 +20,22 @@ Create a production-ready MVP for securely chatting with your documents.
 
 ### 📑Notes files:<br>
 
-The first time following the learning using git branches, I like this way, time efficient and more focus on the knowledge and code logic. The code edits in the following files: <br>
-**Step 2:** Readme, app/files/pages.tsx, supabase/functions/process/index.js, supbase/seed.sql,supabase/migrations/documents.sql<br>
-**Step 3:** Readme, supabase/migrations/embed.sql<br>
-**Step 4:** Readme, next.config.js, app/chat/pages.tsx, supabase/migrations/match.sql, supabase/functions/chat/index.tsx <br>
-**Step 5:** Generate DB schema typescript type, add <Database> generic and type error check. <br>
+The first time following the learning using git branches, I like this way, time efficient and more focus on the knowledge and code logic. The code edits in the following <span style="color:blue">**Branches**</span>: <br>
+
+- **Step-2**
+  - Readme
+  - app/files/pages.tsx
+  - supabase/functions/process/index.js
+  - supbase/seed.sql
+  - supabase/migrations/documents.sql<br>
+- **Step-3**
+  - Readme
+  - supabase/migrations/embed.sql<br>
+- **Step-4**
+  - Readme
+  - next.config.js
+  - app/chat/pages.tsx
+  - supabase/migrations/match.sql
+  - supabase/functions/chat/index.tsx <br>
+- **Step-5**
+  - Generate DB schema typescript type, add \<Database> generic and type error check. <br>
