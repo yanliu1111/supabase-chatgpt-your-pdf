@@ -15,7 +15,7 @@ Create a production-ready MVP for securely chatting with your documents.
 - Database migration
 - The structure of how to use retrival augmented generation (RAG) to process your files, and query smaller meaningful document sections.
 - You will learn pgvector, how to index your text, and create edge functions to process the markdown files into document_sections table.
-- You will learn Embedding from GR ❤️, highly recommend his Embedding teaching.
+- You will learn Embedding from GR ❤️, highly recommend his [Embedding teaching](https://www.youtube.com/watch?v=Yhtjd7yGGGA&t=26s&ab_channel=RabbitHoleSyndrome).
 - The interesting step is generating the ueser message embedding in the frontend. Then determine the similarity with markdown files embedding.
 
 ### 📑Notes files:<br>
